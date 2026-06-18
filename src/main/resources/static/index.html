@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 16px; }
+        h1 { font-size: 1.4rem; }
+        input, textarea { width: 100%; box-sizing: border-box; padding: 8px; font-size: 1rem; }
+        textarea { height: 180px; margin-top: 8px; resize: vertical; }
+        .buttons { margin-top: 8px; }
+        button { padding: 8px 16px; font-size: 1rem; margin-right: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Ask a Question</h1>
+    <input id="question" type="text" placeholder="Type your question..." />
+    <div class="buttons">
+        <button id="askBtn">Ask</button>
+        <button id="resetBtn">Reset</button>
+    </div>
+    <textarea id="answer" readonly placeholder="The answer will appear here..."></textarea>
+
+    <script>
+        const questionEl = document.getElementById('question');
+        const answerEl = document.getElementById('answer');
+        const askBtn = document.getElementById('askBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        async function ask() {
+            const question = questionEl.value.trim();
+            if (!question) {
+                answerEl.value = 'Please enter a question.';
+                return;
+            }
+            askBtn.disabled = true;
+            answerEl.value = 'Thinking...';
+            try {
+                const res = await fetch('/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question })
+                });
+                if (!res.ok) {
+                    throw new Error('Request failed: ' + res.status);
+                }
+                const data = await res.json();
+                answerEl.value = data.answer;
+            } catch (err) {
+                answerEl.value = 'Error: ' + err.message;
+            } finally {
+                askBtn.disabled = false;
+            }
+        }
+
+        function reset() {
+            questionEl.value = '';
+            answerEl.value = '';
+            questionEl.focus();
+        }
+
+        askBtn.addEventListener('click', ask);
+        resetBtn.addEventListener('click', reset);
+        questionEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') ask();
+        });
+    </script>
+</body>
+</html>
