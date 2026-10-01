@@ -1,0 +1,33 @@
+# This file configures Charmcraft.
+# See https://documentation.ubuntu.com/charmcraft/stable/reference/files/charmcraft-yaml-file/ for guidance.
+# For questions or help, visit https://matrix.to/#/#12-factor-charms:ubuntu.com
+
+name: spring-ai-chat-client-demo
+
+type: charm
+
+base: ubuntu@24.04
+
+# the platforms this charm should be built on and run on.
+# you can check your architecture with `dpkg --print-architecture`
+platforms:
+  amd64:
+  # arm64:
+  # ppc64el:
+  # s390x:
+
+# (Required)
+summary: A very short one-line summary of the Spring Boot application.
+
+# (Required)
+description: |
+  A comprehensive overview of your Spring Boot application.
+
+extensions:
+  - spring-boot-framework
+
+requires:
+  inference-api:
+    interface: inference_openai
+    limit: 1
+    optional: false

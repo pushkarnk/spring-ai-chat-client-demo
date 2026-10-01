@@ -11,6 +11,7 @@
         textarea { height: 180px; margin-top: 8px; resize: vertical; }
         .buttons { margin-top: 8px; }
         button { padding: 8px 16px; font-size: 1rem; margin-right: 8px; cursor: pointer; }
+	.hint { color: #666; font-size: 0.85rem; margin-top: 4px; }
     </style>
 </head>
 <body>
@@ -21,7 +22,8 @@
         <button id="resetBtn">Reset</button>
     </div>
     <textarea id="answer" readonly placeholder="The answer will appear here..."></textarea>
-
+    <div class="hint">Model: <span id="model">—</span></div>
+ 
     <script>
         const questionEl = document.getElementById('question');
         const answerEl = document.getElementById('answer');
@@ -37,7 +39,8 @@
             askBtn.disabled = true;
             answerEl.value = 'Thinking...';
             try {
-                const res = await fetch('/ask', {
+		const base = location.pathname.endsWith('/') ? location.pathname : location.pathname + '/';
+                const res = await fetch(base + 'ask', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ question })
@@ -65,6 +68,21 @@
         questionEl.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') ask();
         });
+        const modelEl = document.getElementById('model');
+
+        async function updateModel() {
+            try {
+		const base = location.pathname.endsWith('/') ? location.pathname : location.pathname + '/';
+                const res = await fetch(base + '/actuator/metrics/gen_ai.client.token.usage');
+                if (!res.ok) return; // no data yet (ask a question first)
+                const data = await res.json();
+                const tag = (data.availableTags || []).find(t => t.tag === 'gen_ai.response.model');
+                if (tag && tag.values.length > 0) modelEl.textContent = tag.values.join(', ');
+            } catch (err) { /* metrics unavailable */ }
+        }
+
+        updateModel();
+        setInterval(updateModel, 5000);
     </script>
 </body>
 </html>
